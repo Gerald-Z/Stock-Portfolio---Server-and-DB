@@ -2,10 +2,15 @@
   "name": "stock-portfolio---server-and-db",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "App.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node App.js"
   },
   "author": "Gerald Zhu",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "mongoose": "^7.4.3",
+    "nodemon": "^3.0.1"
+  }
 }
