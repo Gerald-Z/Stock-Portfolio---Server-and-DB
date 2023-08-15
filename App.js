@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 
-const mongoose = require("mongoose");
 
 // Connecting to the database
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -38,15 +37,6 @@ const createAndSavePosition = () => {
     });
 };
 
-const finished = function(err, data) {
-    if (err) {
-        console.log("There has been an error");
-        console.log(err);
-        return;
-    } else {
-        console.log("The code is done");
-        console.log(data);
-    }
-}
+
 
 createAndSavePosition();
