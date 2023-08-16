@@ -18,29 +18,29 @@ app.use(express.json())
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 const Schema = mongoose.Schema;
 const positionSchema = new Schema({
-    CompanyName: String,
-    Ticker: String,
-    SharesOwned: Number,
-    SharePrice: Number,
-    TotalCost: Number,
-    TotalValue: Number,
-    EstimatedDivPayout: Number,
-    EstimatedDivYield: Number
-  });
+    name: String, 
+    portfolio: [{
+        CompanyName: String,
+        Ticker: String,
+        SharesOwned: Number,
+        SharePrice: Number,
+        TotalCost: Number,
+        TotalValue: Number,
+        EstimatedDivPayout: Number,
+        EstimatedDivYield: Number
+    }]
+});
 const Position = mongoose.model("Position", positionSchema);
 
 
 
 // findPortfoliobyName(personName) takes in string personName, finds the associated
 //      portfolio in the MongoDB, and returns said portfolio as a JSON. 
-
-var findPortfolioByName = function(personName) {
-    var returned = Position.find({name: personName}, function (err, people) {
-        if (err) return console.log(err);
-        done(null, people);
-    });
-    var name = returned.select('portfolio');
-    return name;
+var findPortfolioByName = async function(personName) {
+    var returned = await Position.find({name: personName});
+   // var name = returned.select('portfolio');
+    console.log(returned[0].portfolio[0].CompanyName);
+    return returned[0].portfolio[0];
 }
 
 // createAndSavePosition(userName) takes in string userName and object newPosition
@@ -65,14 +65,14 @@ const createAndSavePosition = (userName, newPosition) => {
 };
 
 
-
-
-
 // API returns the portfolio of the user. 
-app.get('/api/portfolio', (req, res) => {
+app.get('/api/portfolio', async (req, res) => {
     const {name } = req.body;
-    const portfolio = findPortfolioByName(name);
-    res.status(200).json({ success: true, data: portfolio })
+    const portfolio = await findPortfolioByName("Investor");
+    //res.status(200).json({ success: true, data: portfolio })
+   // res.status(200).json({ data: portfolio})
+  // console.log(portfolio);
+    res.json(portfolio);
 })
 
 
@@ -98,3 +98,6 @@ app.post('/api/addPosition', (req, res) => {
 app.listen(5500, () => {
   console.log('Server is listening on port 5500....')
 })
+
+//findPortfolioByName("Investor");
+//process.exit();
