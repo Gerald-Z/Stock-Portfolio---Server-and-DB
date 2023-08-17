@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const mongoose = require("mongoose");
+const cors = require('cors');
 
 require('dotenv').config();
 
@@ -11,6 +12,10 @@ app.use(express.static('./methods-public'))
 app.use(express.urlencoded({ extended: false }))
 // parse json
 app.use(express.json())
+// Enable CORS
+app.use(cors({origin: 'localhost:5500'}));
+// If we wish to enable CORS from all websites.
+app.use(cors({origin: '*'}));
 
 
 
@@ -40,7 +45,7 @@ var findPortfolioByName = async function(personName) {
     var returned = await Position.find({name: personName});
    // var name = returned.select('portfolio');
     console.log(returned[0].portfolio[0].CompanyName);
-    return returned[0].portfolio[0];
+    return returned[0].portfolio[0].CompanyName;
 }
 
 // createAndSavePosition(userName) takes in string userName and object newPosition
@@ -72,7 +77,7 @@ app.get('/api/portfolio', async (req, res) => {
     //res.status(200).json({ success: true, data: portfolio })
    // res.status(200).json({ data: portfolio})
   // console.log(portfolio);
-    res.json(portfolio);
+    res.json({data: portfolio});
 })
 
 
@@ -95,8 +100,8 @@ app.post('/api/addPosition', (req, res) => {
 
 
 
-app.listen(5500, () => {
-  console.log('Server is listening on port 5500....')
+app.listen(4400, () => {
+  console.log('Server is listening on port 4400....')
 })
 
 //findPortfolioByName("Investor");
