@@ -76,31 +76,33 @@ const createAndSavePosition = (userName, newPosition) => {
 // Also, both TotalCost and TotalValue will be subtracted by shares x price.
 // Note that if this function is called, the order has been confirmed to be valid
 //      and a sell is possible.
-const sellShare = async (position, shares, price) => {
-    console.log("Sell share position is", position);
-    position.portfolio[0].SharesOwned -= shares;
-    position.portfolio[0].TotalCost -= shares * price;
-    console.log("Sell Share was called", position.portfolio[0].SharesOwned);
+const sellShare = async (position, shares, price, index) => {
+   // console.log("Sell share position is", position.portfolio[2].SharesOwned);
+    position.portfolio[index].SharesOwned -= shares;
+    position.portfolio[index].TotalCost -= shares * price;
+  //  console.log("Sell Share was called", position.portfolio[2].SharesOwned);
     await position.save();
 }
 
-const buyShare = async (position, shares, price) => {
-    position.portfolio[0].SharesOwned += shares;
-    position.portfolio[0].TotalCost += shares * price;
-    console.log("Buyshare was called", position.portfolio[0].SharesOwned);
+const buyShare = async (position, shares, price, index) => {
+   // console.log("Buy share position is", position);
+    position.portfolio[index].SharesOwned += shares;
+    position.portfolio[index].TotalCost += shares * price;
+  //  console.log("Buyshare was called", position.portfolio[0].SharesOwned);
     await position.save();
 }
 
 
 const handleChange = async (userName, orderType, ticker, shares, price) => {
     const currentPortfolio = await findPortfolioByName(userName);
-    //currentPortfolio = await currentPortfolio.();
+   // currentPortfolio = await currentPortfolio;
    // console.log(currentPortfolio);
-    let position;
-    for (var i = 0; i < currentPortfolio.length; i++) {
-       // console.log("the ticker here is", currentPortfolio[i].portfolio[0].Ticker);
-        if (currentPortfolio[i].portfolio[0].Ticker == ticker) {
-            position = currentPortfolio[i];
+    let position = currentPortfolio[0];
+    let index = 0;
+    for (var i = 0; i < position.portfolio.length; i++) {
+   //     console.log("the ticker here is", position.portfolio[i].Ticker);
+        if (position.portfolio[i].Ticker == ticker) {
+            index = i;
         }
     }
   //  console.log("Position is", position);
@@ -111,14 +113,13 @@ const handleChange = async (userName, orderType, ticker, shares, price) => {
         } else {
             return false;
         }
-    } else if (orderType == "Sell" && shares > position.portfolio[0].SharesOwned) {
+    } else if (orderType == "Sell" && shares > position.portfolio[index].SharesOwned) {
         return false;
-    } else if (orderType == "Sell" && shares <= position.portfolio[0].SharesOwned) {
-        
-        sellShare(position, shares, price);
+    } else if (orderType == "Sell" && shares <= position.portfolio[index].SharesOwned) {
+        sellShare(position, shares, price, index);
         return true;
     } else if (orderType == "Buy") {
-        buyShare(position, shares, price);
+        buyShare(position, shares, price, index);
         return true;
     } else {
         return false;
