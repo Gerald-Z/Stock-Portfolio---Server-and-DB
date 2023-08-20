@@ -13,7 +13,8 @@ app.use(express.urlencoded({ extended: false }))
 // parse json
 app.use(express.json())
 // Enable CORS
-app.use(cors({origin: 'localhost:5500'}));
+
+// app.use(cors({origin: 'localhost:5500'}));
 // If we wish to enable CORS from all websites.
 app.use(cors({origin: '*'}));
 
@@ -40,13 +41,14 @@ const Position = mongoose.model("Position", positionSchema);
 
 
 // findPortfoliobyName(personName) takes in string personName, finds the associated
-//      portfolio in the MongoDB, and returns said portfolio as a JSON. 
+//      portfolio in the MongoDB, and returns all the documents of that person as a JSON. 
 var findPortfolioByName = async function(personName) {
     var returned = await Position.find({name: personName});
    // var name = returned.select('portfolio');
-    console.log(returned[0].portfolio[0].CompanyName);
-    return returned[0].portfolio[0].CompanyName;
+   // console.log(returned);
+    return returned;
 }
+
 
 // createAndSavePosition(userName) takes in string userName and object newPosition
 //      and creates a new position for the user userName using info from newPosition.
@@ -69,31 +71,87 @@ const createAndSavePosition = (userName, newPosition) => {
     });
 };
 
+// sellShare interacts with the MongoDB database and modifies the portfolio
+//      of userName so that shares of ticker will be subtracted from sharesOwned/
+// Also, both TotalCost and TotalValue will be subtracted by shares x price.
+// Note that if this function is called, the order has been confirmed to be valid
+//      and a sell is possible.
+const sellShare = async (position, shares, price) => {
+    console.log("Sell share position is", position);
+    position.portfolio[0].SharesOwned -= shares;
+    position.portfolio[0].TotalCost -= shares * price;
+    console.log("Sell Share was called", position.portfolio[0].SharesOwned);
+    await position.save();
+}
+
+const buyShare = async (position, shares, price) => {
+    position.portfolio[0].SharesOwned += shares;
+    position.portfolio[0].TotalCost += shares * price;
+    console.log("Buyshare was called", position.portfolio[0].SharesOwned);
+    await position.save();
+}
+
+
+const handleChange = async (userName, orderType, ticker, shares, price) => {
+    const currentPortfolio = await findPortfolioByName(userName);
+    //currentPortfolio = await currentPortfolio.();
+   // console.log(currentPortfolio);
+    let position;
+    for (var i = 0; i < currentPortfolio.length; i++) {
+       // console.log("the ticker here is", currentPortfolio[i].portfolio[0].Ticker);
+        if (currentPortfolio[i].portfolio[0].Ticker == ticker) {
+            position = currentPortfolio[i];
+        }
+    }
+  //  console.log("Position is", position);
+  //  console.log("OrderType is", orderType);
+    if (orderType == "Sell" && typeof position === "undefined") {
+        if (shares == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    } else if (orderType == "Sell" && shares > position.portfolio[0].SharesOwned) {
+        return false;
+    } else if (orderType == "Sell" && shares <= position.portfolio[0].SharesOwned) {
+        
+        sellShare(position, shares, price);
+        return true;
+    } else if (orderType == "Buy") {
+        buyShare(position, shares, price);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 
 // API returns the portfolio of the user. 
-app.get('/api/portfolio', async (req, res) => {
-    const {name } = req.body;
+app.get('/api/Investor/portfolio', async (req, res) => {
     const portfolio = await findPortfolioByName("Investor");
-    //res.status(200).json({ success: true, data: portfolio })
-   // res.status(200).json({ data: portfolio})
-  // console.log(portfolio);
     res.json({data: portfolio});
 })
 
 
-
-
-// API adds a new position to the user's portfolio. 
-app.post('/api/addPosition', (req, res) => {
-  const { name, userName, newPosition } = req.body;
+// API modifies a position according to the user's API request.
+// If the ticker symbol didn't exist in the portfolio yet, a new document
+//      will be created. Otherwise, changes will be made to the existing position.
+app.post('/api/Investor/changePosition', (req, res) => {
+  const { orderType, ticker, shares, price } = req.body;
   
-  if (!name) {
-    return res
-      .status(400)
-      .json({ success: false, msg: 'please provide name value' })
-  }
-  createAndSavePosition(userName, userName, newPosition);
-  res.status(201).json({ success: true })
+ // if (!name) {
+  //  return res
+   //   .status(400)
+    //  .json({ success: false, msg: 'please provide name value' })
+ // }
+ // createAndSavePosition(userName, userName, newPosition);
+    const outcome = handleChange("Investor", orderType, ticker, shares, price);
+    if (outcome) {
+        res.status(201).json({ success: true });
+    } else {
+        res.status(400);
+    }
 })
 
 
