@@ -121,7 +121,7 @@ const handleChange = async (userName, password, orderType, ticker, shares, price
 
 app.use("/api/login", async (req, res) => {
     const profile = await findPortfolioByCred(req.body.username, req.body.password)
-    console.log(profile);
+   // console.log(profile);
     if (profile.length == 0) {
         res.status(201).send(false);
     } else {
@@ -133,6 +133,7 @@ app.use("/api/login", async (req, res) => {
 // API returns the portfolio of the user. 
 app.use('/api/Investor/portfolio', async (req, res) => {
     var portfolio = await findPortfolioByCred(req.body.username, req.body.password)
+
     res.json({data: portfolio});
 })
 
