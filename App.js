@@ -10,6 +10,7 @@ const Schema = mongoose.Schema;
 
 const positionSchema = new Schema({
     name: String, 
+    password: String,
     portfolio: [{
         CompanyName: String,
         Ticker: String,
@@ -60,6 +61,8 @@ const GS = {
 const createAndSavePosition = () => {
     var newPos = new Position({
         name: "Investor",
+        password: "Password",
+        token: "Token",
         portfolio: [BX, BLK, GS]
     });
     

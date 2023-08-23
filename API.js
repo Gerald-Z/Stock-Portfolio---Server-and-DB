@@ -38,17 +38,10 @@ const positionSchema = new Schema({
 });
 const Position = mongoose.model("Position", positionSchema);
 
-
-
-// findPortfoliobyName(personName) takes in string personName, finds the associated
-//      portfolio in the MongoDB, and returns all the documents of that person as a JSON. 
-var findPortfolioByName = async function(personName) {
-    var returned = await Position.find({name: personName});
-   // var name = returned.select('portfolio');
-   // console.log(returned);
+const findPortfolioByCred = async (usernames, passwords) => {
+    const returned = await Position.find({name: usernames, password: passwords});
     return returned;
 }
-
 
 // createAndSavePosition(userName) takes in string userName and object newPosition
 //      and creates a new position for the user userName using info from newPosition.
@@ -93,8 +86,8 @@ const buyShare = async (position, shares, price, index) => {
 }
 
 
-const handleChange = async (userName, orderType, ticker, shares, price) => {
-    const currentPortfolio = await findPortfolioByName(userName);
+const handleChange = async (userName, password, orderType, ticker, shares, price) => {
+    const currentPortfolio = await findPortfolioByCred(userName, password);
    // currentPortfolio = await currentPortfolio;
    // console.log(currentPortfolio);
     let position = currentPortfolio[0];
@@ -126,11 +119,20 @@ const handleChange = async (userName, orderType, ticker, shares, price) => {
     }
 }
 
+app.use("/api/login", async (req, res) => {
+    const profile = await findPortfolioByCred(req.body.username, req.body.password)
+    console.log(profile);
+    if (profile.length == 0) {
+        res.status(201).send(false);
+    } else {
+        res.status(201).send(true);
+    }
+})
 
 
 // API returns the portfolio of the user. 
-app.get('/api/Investor/portfolio', async (req, res) => {
-    const portfolio = await findPortfolioByName("Investor");
+app.use('/api/Investor/portfolio', async (req, res) => {
+    var portfolio = await findPortfolioByCred(req.body.username, req.body.password)
     res.json({data: portfolio});
 })
 
@@ -140,14 +142,7 @@ app.get('/api/Investor/portfolio', async (req, res) => {
 //      will be created. Otherwise, changes will be made to the existing position.
 app.post('/api/Investor/changePosition', (req, res) => {
   const { orderType, ticker, shares, price } = req.body;
-  
- // if (!name) {
-  //  return res
-   //   .status(400)
-    //  .json({ success: false, msg: 'please provide name value' })
- // }
- // createAndSavePosition(userName, userName, newPosition);
-    const outcome = handleChange("Investor", orderType, ticker, shares, price);
+    const outcome = handleChange("Investor", "Password", orderType, ticker, shares, price);
     if (outcome) {
         res.status(201).json({ success: true });
     } else {
@@ -163,5 +158,4 @@ app.listen(4400, () => {
   console.log('Server is listening on port 4400....')
 })
 
-//findPortfolioByName("Investor");
 //process.exit();
