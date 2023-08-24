@@ -25,6 +25,7 @@ mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopol
 const Schema = mongoose.Schema;
 const positionSchema = new Schema({
     name: String, 
+    password: String,
     portfolio: [{
         CompanyName: String,
         Ticker: String,
@@ -54,7 +55,9 @@ const createAndSavePosition = (username, password) => {
         portfolio: []
     });
     
-    newPos.save();
+    newPos.save().then(saved => {
+     //   console.log(saved === newPos);
+    })
 };
 
 
@@ -64,18 +67,14 @@ const createAndSavePosition = (username, password) => {
 // Note that if this function is called, the order has been confirmed to be valid
 //      and a sell is possible.
 const sellShare = async (position, shares, price, index) => {
-   // console.log("Sell share position is", position.portfolio[2].SharesOwned);
     position.portfolio[index].SharesOwned -= shares;
     position.portfolio[index].TotalCost -= shares * price;
-  //  console.log("Sell Share was called", position.portfolio[2].SharesOwned);
     await position.save();
 }
 
 const buyShare = async (position, shares, price, index) => {
-   // console.log("Buy share position is", position);
     position.portfolio[index].SharesOwned += shares;
     position.portfolio[index].TotalCost += shares * price;
-  //  console.log("Buyshare was called", position.portfolio[0].SharesOwned);
     await position.save();
 }
 
@@ -112,17 +111,20 @@ const handleChange = async (userName, password, orderType, ticker, shares, price
 app.use("/api/login", async (req, res) => {
     const profile = await findPortfolioByCred(req.body.username, req.body.password)
     if (profile.length == 0) {
-        res.status(201).send(false);
+        res.status(201).json({"createStatus": false});
     } else {
-        res.status(201).send(true);
+        res.status(201).json({"createStatus": true});
     }
 })
 
 
 app.use("/api/newUser", async (req, res) => {
-    const profile = await findPortfolioByCred(req.body.username, req.body.password)
+    const username = req.body.username;
+    const password = req.body.password;
+    const profile = await findPortfolioByCred(username, password);
+    
     if (profile.length == 0) {
-        createAndSavePosition(req.body.username, req.body.password);
+        createAndSavePosition(username, password);
         res.status(201).send(true);
     } else {
         res.status(201).send(false);
