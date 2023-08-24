@@ -47,22 +47,16 @@ const findPortfolioByCred = async (usernames, passwords) => {
 //      and creates a new position for the user userName using info from newPosition.
 // This function is only called when a new position is created, not when changes are
 //      made to an already existing position.  
-const createAndSavePosition = (userName, newPosition) => {
-    const user = Position.find({name: userName}, function (err, people) {
-        if (err) return console.log(err);
-        done(null, people);
+const createAndSavePosition = (username, password) => {
+    var newPos = new Position({
+        name: username,
+        password: password,
+        portfolio: []
     });
-    const userId = user.select('id');
-
-    Position.findByID(userId, function (err, user) {
-        if (err) return console.log(err);
-        user.portfolio.push(newPosition);
-        user.save((err, updatedUser) => {
-            if(err) return console.log(err);
-            done(null, updatedUser)
-        })
-    });
+    
+    newPos.save();
 };
+
 
 // sellShare interacts with the MongoDB database and modifies the portfolio
 //      of userName so that shares of ticker will be subtracted from sharesOwned/
@@ -88,18 +82,14 @@ const buyShare = async (position, shares, price, index) => {
 
 const handleChange = async (userName, password, orderType, ticker, shares, price) => {
     const currentPortfolio = await findPortfolioByCred(userName, password);
-   // currentPortfolio = await currentPortfolio;
-   // console.log(currentPortfolio);
     let position = currentPortfolio[0];
     let index = 0;
     for (var i = 0; i < position.portfolio.length; i++) {
-   //     console.log("the ticker here is", position.portfolio[i].Ticker);
         if (position.portfolio[i].Ticker == ticker) {
             index = i;
         }
     }
-  //  console.log("Position is", position);
-  //  console.log("OrderType is", orderType);
+
     if (orderType == "Sell" && typeof position === "undefined") {
         if (shares == 0) {
             return true;
@@ -121,11 +111,21 @@ const handleChange = async (userName, password, orderType, ticker, shares, price
 
 app.use("/api/login", async (req, res) => {
     const profile = await findPortfolioByCred(req.body.username, req.body.password)
-   // console.log(profile);
     if (profile.length == 0) {
         res.status(201).send(false);
     } else {
         res.status(201).send(true);
+    }
+})
+
+
+app.use("/api/newUser", async (req, res) => {
+    const profile = await findPortfolioByCred(req.body.username, req.body.password)
+    if (profile.length == 0) {
+        createAndSavePosition(req.body.username, req.body.password);
+        res.status(201).send(true);
+    } else {
+        res.status(201).send(false);
     }
 })
 
@@ -151,12 +151,6 @@ app.post('/api/Investor/changePosition', (req, res) => {
     }
 })
 
-
-
-
-
 app.listen(4400, () => {
   console.log('Server is listening on port 4400....')
 })
-
-//process.exit();
