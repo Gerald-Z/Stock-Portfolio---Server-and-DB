@@ -51,7 +51,6 @@ const deleteUserProfile = (username) => {
     });
 }
 
-
 // createAndSavePosition(userName) takes in string userName and object newPosition
 //      and creates a new position for the user userName using info from newPosition.
 // This function is only called when a new position is created, not when changes are
@@ -67,7 +66,6 @@ const createAndSavePosition = (username, password) => {
      //   console.log(saved === newPos);
     })
 };
-
 
 // sellShare interacts with the MongoDB database and modifies the portfolio
 //      of userName so that shares of ticker will be subtracted from sharesOwned/
