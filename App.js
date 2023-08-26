@@ -75,5 +75,13 @@ const createAndSavePosition = () => {
 
 
 
-createAndSavePosition();
+//createAndSavePosition();
 //process.exit();
+
+const deleteUserProfile = (username) => {
+    Position.findOneAndDelete({name: username}).then(doc => {
+        console.log("Deleted user :", doc);
+    });
+}
+
+deleteUserProfile("user");

@@ -44,6 +44,14 @@ const findPortfolioByCred = async (usernames, passwords) => {
     return returned;
 }
 
+const deleteUserProfile = (username) => {
+    Position.findOneAndDelete({name: username}).then(doc => {
+     //   console.log("Deleted user :", doc);
+        return true;
+    });
+}
+
+
 // createAndSavePosition(userName) takes in string userName and object newPosition
 //      and creates a new position for the user userName using info from newPosition.
 // This function is only called when a new position is created, not when changes are
@@ -78,7 +86,6 @@ const buyShare = async (position, shares, price, index) => {
     await position.save();
 }
 
-
 const handleChange = async (userName, password, orderType, ticker, shares, price) => {
     const currentPortfolio = await findPortfolioByCred(userName, password);
     let position = currentPortfolio[0];
@@ -109,14 +116,20 @@ const handleChange = async (userName, password, orderType, ticker, shares, price
 }
 
 app.use("/api/login", async (req, res) => {
+   // console.log(req.body.username);
     const profile = await findPortfolioByCred(req.body.username, req.body.password)
     if (profile.length == 0) {
-        res.status(201).json({"createStatus": false});
+        res.status(201).send(false);
     } else {
-        res.status(201).json({"createStatus": true});
+        res.status(201).send(true);
     }
 })
 
+app.use("/api/delete", async (req, res) => {
+   // console.log(req.body.username);
+    const status = await deleteUserProfile(req.body.username);
+    if (status) {res.status(201).send(true);};
+})
 
 app.use("/api/newUser", async (req, res) => {
     const username = req.body.username;
@@ -131,21 +144,26 @@ app.use("/api/newUser", async (req, res) => {
     }
 })
 
-
 // API returns the portfolio of the user. 
-app.use('/api/Investor/portfolio', async (req, res) => {
+app.use('/api/portfolio', async (req, res) => {
+    //console.log(req.body.username);
+
     var portfolio = await findPortfolioByCred(req.body.username, req.body.password)
 
     res.json({data: portfolio});
 })
 
+app.use('/api/delete', async (req, res) => {
+    deleteUserProfile(req.body.username);
 
+});
+    
 // API modifies a position according to the user's API request.
 // If the ticker symbol didn't exist in the portfolio yet, a new document
 //      will be created. Otherwise, changes will be made to the existing position.
-app.post('/api/Investor/changePosition', (req, res) => {
-  const { orderType, ticker, shares, price } = req.body;
-    const outcome = handleChange("Investor", "Password", orderType, ticker, shares, price);
+app.post('/api/changePosition', (req, res) => {
+    const { username, password, orderType, ticker, shares, price } = req.body;
+    const outcome = handleChange(username, password, orderType, ticker, shares, price);
     if (outcome) {
         res.status(201).json({ success: true });
     } else {
