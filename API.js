@@ -27,14 +27,11 @@ const positionSchema = new Schema({
     name: String, 
     password: String,
     portfolio: [{
-        CompanyName: String,
         Ticker: String,
         SharesOwned: Number,
-        SharePrice: Number,
         TotalCost: Number,
         TotalValue: Number,
-        EstimatedDivPayout: Number,
-        EstimatedDivYield: Number
+
     }]
 });
 const Position = mongoose.model("Position", positionSchema);
